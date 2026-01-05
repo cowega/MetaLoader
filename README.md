@@ -1,6 +1,6 @@
 # MetaLoader
 [![Telegram](https://img.shields.io/badge/Telegram-Channel-2CA5E0?style=flat-square&logo=telegram&logoColor=white)](https://xmetaloader.t.me)  
-**MetaLoader** is a mod loader for **Tanks Blitz** and **World of Tanks Blitz**, giving you full control over your game modifications.
+**MetaLoader** is a mod loader for **Tanks Blitz** and **World of Tanks Blitz** (temporarily not supported), giving you full control over your game modifications.
 
 > Manage your mods easily using MetaLoader!
 
@@ -25,7 +25,7 @@ Game Folder/
     │   └── data/...
     └── metaloader.log.txt
 ```
-> Ensure each mod folder contains the `data` directory inside.
+> Ensure each mod folder contains the `Data` directory inside.
 
 ## Build
 ```powershell
