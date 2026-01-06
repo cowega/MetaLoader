@@ -1,5 +1,6 @@
 #include "utils.hpp"
 #include "main.hpp"
+#include "memory.hpp"
 
 std::string GetCurrentProcessName() {
     char procName[MAX_PATH];
@@ -106,8 +107,8 @@ void MainThread(HMODULE hModule) {
     spdlog::info("Build: {} {}", BUILD_DATE, BUILD_TIME);
     spdlog::info("Current process: {}", GetCurrentProcessName());
 
-    uintptr_t baseAddr = (uintptr_t)GetModuleHandle(NULL);
-    uintptr_t targetAddr = baseAddr + CompressedCreateAddr;
+    uintptr_t CompressedCreateAddr = FindCompressedCreate();
+    if (!CompressedCreateAddr) return;
 
     MH_STATUS status = MH_Initialize();
     if (status != MH_OK) {
@@ -115,7 +116,7 @@ void MainThread(HMODULE hModule) {
         return;
     }
 
-    status = MH_CreateHook((LPVOID)targetAddr, &CompressedCreateHook, (LPVOID*)&CompressedCreate);
+    status = MH_CreateHook((LPVOID)CompressedCreateAddr, &CompressedCreateHook, (LPVOID*)&CompressedCreate);
     if (status != MH_OK) {
         spdlog::error("Failed to create hook: {}", MH_StatusToString(status));
         MH_Uninitialize();
@@ -129,7 +130,7 @@ void MainThread(HMODULE hModule) {
         return;
     }
 
-    spdlog::info("Hook active at 0x{:X} (offset: 0x{:X})\n", targetAddr, CompressedCreateAddr);
+    spdlog::info("Hook active at 0x{:X}\n", CompressedCreateAddr);
 
     while (g_isRun) {
         Sleep(100);
