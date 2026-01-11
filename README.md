@@ -42,3 +42,4 @@ Distributed under the MIT License. See `LICENSE` for more information.
 ## Built With
 * [MinHook](https://github.com/TsudaKageyu/minhook) - The minimal x86/x64 API hooking library.
 * [spdlog](https://github.com/gabime/spdlog) - Fast C++ logging library.
+* [SigSearch](https://github.com/LADIlib/SigSearch) - Small header-only compile-time-friendly fast Signature Search utility.
