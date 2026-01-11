@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 cmake_policy(VERSION 3.15)
 
-project(MetaLoader VERSION 1.0.1 LANGUAGES CXX)
+project(MetaLoader VERSION 2.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -34,12 +34,7 @@ FetchContent_Declare(
     GIT_TAG        a9aa2bc59ccfa60766ca7fb74193d2ab0126c56a
 )
 
-FetchContent_MakeAvailable(minhook spdlog)
-
-FetchContent_GetProperties(sigsearch)
-if(NOT sigsearch_POPULATED)
-    FetchContent_Populate(sigsearch)
-endif()
+FetchContent_MakeAvailable(minhook spdlog sigsearch)
 
 file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.h")
 

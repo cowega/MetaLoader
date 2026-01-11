@@ -1,29 +1,31 @@
-#include "main.hpp"
+#include <Windows.h>
+
 #include "utils.hpp"
+#include "Loader.hpp"
 
 extern "C" __declspec(dllexport) void DummyExport() { return; }
+
+void MainThread(HMODULE hModule) {
+    Loader* loader = new Loader();
+
+    while (Loader::g_isRun) {
+        Sleep(100);
+    }
+
+    delete loader;
+}
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved) {
     switch (ul_reason_for_call) {
     case DLL_PROCESS_ATTACH:
-        if (GetCurrentProcessName().find("blitz") == std::string::npos) return TRUE;
+        if (Utils::GetCurrentProcessName().find("blitz") == std::string::npos) return TRUE;
 
         DisableThreadLibraryCalls(hModule);
         CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)MainThread, hModule, 0, nullptr);
         break;
 
     case DLL_PROCESS_DETACH:
-        g_isRun = false;
-        Sleep(200);
-
-        if (g_isLoggerReady) {
-            spdlog::info("Metaloader unloading");
-            spdlog::default_logger()->flush();
-            spdlog::shutdown();
-        }
-
-        MH_DisableHook(MH_ALL_HOOKS);
-        MH_Uninitialize();
+        
         break;
     }
     return TRUE;
