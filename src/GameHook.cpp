@@ -16,11 +16,13 @@ GameHook::GameHook(std::atomic_bool& successInit) {
         successInit = false;
         return;
     }
+    if (!this->mlo) this->mlo = new ModLoadOrder();
 }
 
 GameHook::~GameHook() {
     MH_DisableHook(MH_ALL_HOOKS);
     MH_Uninitialize();
+    delete this->mlo;
 }
 
 bool GameHook::CreateHook() {
@@ -79,43 +81,23 @@ bool GameHook::CreateHook() {
 }
 
 __int64 __fastcall GameHook::Hook(const char* originalPathObj, void** a2, unsigned int a3) {
-    if (!originalPathObj) return CompressedCreate(originalPathObj, a2, a3);
+    if (!originalPathObj || !GameHook::mlo) return CompressedCreate(originalPathObj, a2, a3);
 
-    const fs::path currentWorkDirectory = fs::current_path() / "metaloader";
-    std::vector<fs::path> folders = Utils::GetDirectories(currentWorkDirectory);
+    auto modPath = GameHook::mlo->GetFile(Utils::CutRawGamePath(originalPathObj).string());
+    
+    if (modPath.empty()) return CompressedCreate(originalPathObj, a2, a3);
+    
+    alignas(16) char fakeObject[1024];
+    memset(fakeObject, 0, 1024);
 
-    if (!folders.empty()) {
-        std::string originalPathStr = originalPathObj;
-
-        for (const fs::path& modFolder : folders) {
-            fs::path DVPLPath = modFolder / Utils::CutRawGamePath(originalPathStr);
-            std::error_code ec;
-
-            if (fs::exists(DVPLPath, ec) && !ec) {
-                fs::path relativeModPath = "metaloader" / modFolder.filename() / Utils::CutRawGamePath(originalPathStr);
-                std::string sRelativeModPath = relativeModPath.generic_string();
-
-                if (Loader::g_isLoggerReady) {
-                    spdlog::info("Redirect: {} -> {}", originalPathObj, sRelativeModPath);
-                }
-
-                alignas(16) char fakeObject[1024];
-                memset(fakeObject, 0, 1024);
-
-                if (sRelativeModPath.size() >= 511) {
-                    if (Loader::g_isLoggerReady) {
-                        spdlog::error("Path too long! ({}/511)", sRelativeModPath.size());
-                    }
-                    continue;
-                }
-
-                strcpy_s(fakeObject, 512, sRelativeModPath.c_str());
-                *(size_t*)(fakeObject + 512) = sRelativeModPath.length();
-
-                return CompressedCreate(fakeObject, a2, a3);
-            }
+    if (modPath.size() >= 511) {
+        if (Loader::g_isLoggerReady) {
+            spdlog::error("Path too long! ({}/511)", modPath.size());
         }
     }
 
-    return CompressedCreate(originalPathObj, a2, a3);
+    strcpy_s(fakeObject, 512, modPath.c_str());
+    *(size_t*)(fakeObject + 512) = modPath.length();
+
+    return CompressedCreate(fakeObject, a2, a3);
 }

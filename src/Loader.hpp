@@ -3,8 +3,9 @@
 #include <atomic>
 
 #include "GameHook.hpp"
+#include "LoaderUI.hpp"
 
-#define VERSION "2.0.0"
+#define VERSION "2.1.0"
 #define BUILD_DATE __DATE__
 #define BUILD_TIME __TIME__
 
@@ -19,6 +20,7 @@ public:
 
 private:
     GameHook* hook = nullptr;
+    LoaderUI* render = nullptr;
 
 private:
     void InitLogger();

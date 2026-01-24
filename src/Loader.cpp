@@ -16,10 +16,13 @@ Loader::Loader() {
     if (!this->g_isRun) return;
 
     this->g_isRun = hook->CreateHook();
+
+    this->render = new LoaderUI(this->hook->mlo);
 }
 
 Loader::~Loader() {
     delete this->hook;
+    delete this->render;
     this->g_isRun = false;
 
     if (this->g_isLoggerReady) {

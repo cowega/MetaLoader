@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 cmake_policy(VERSION 3.15)
 
-project(MetaLoader VERSION 2.0.0 LANGUAGES CXX)
+project(MetaLoader VERSION 2.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -15,6 +15,8 @@ include(FetchContent)
 
 set(MH_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(MH_ENABLE_TESTS OFF CACHE BOOL "" FORCE)
+set(JSON_BuildTests OFF CACHE INTERNAL "")
+set(JSON_Install OFF CACHE INTERNAL "")
 
 FetchContent_Declare(
     minhook
@@ -34,21 +36,37 @@ FetchContent_Declare(
     GIT_TAG        a9aa2bc59ccfa60766ca7fb74193d2ab0126c56a
 )
 
-FetchContent_MakeAvailable(minhook spdlog sigsearch)
+FetchContent_Declare(
+    json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG        2bb9d59fdeeb8784764267e13e2ae3ab6897cb25
+)
 
-file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.h")
+FetchContent_MakeAvailable(minhook spdlog sigsearch json)
+
+file(GLOB_RECURSE SOURCES
+    "src/*.cpp" "src/*.h"
+    "third-party/imgui/*.cpp" "third-party/imgui/*.h"
+    "third-party/kiero/*.cpp" "third-party/kiero/*.h"
+)
 
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     src
     ${sigsearch_SOURCE_DIR}
+    "third-party/imgui"
+    "third-party/kiero"
 )
 
 target_link_libraries(${PROJECT_NAME} 
     PRIVATE 
     minhook 
     spdlog::spdlog
+    nlohmann_json::nlohmann_json
+    d3d11
+    dxgi
+    d3dcompiler
 )
 
 set_target_properties(${PROJECT_NAME}

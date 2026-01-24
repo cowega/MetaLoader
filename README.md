@@ -13,6 +13,8 @@
 ## Usage
 After installation, simply place your mod files into the `metaloader` folder. The loader will automatically inject them when the game starts.
 
+> To open the mod priority management menu, press `Insert` in the game.
+
 **Directory structure example:**
 ```text
 Game Folder/
@@ -43,3 +45,6 @@ Distributed under the MIT License. See `LICENSE` for more information.
 * [MinHook](https://github.com/TsudaKageyu/minhook) - The minimal x86/x64 API hooking library.
 * [spdlog](https://github.com/gabime/spdlog) - Fast C++ logging library.
 * [SigSearch](https://github.com/LADIlib/SigSearch) - Small header-only compile-time-friendly fast Signature Search utility.
+* [ImGui](https://github.com/ocornut/imgui) - Bloat-free Graphical User interface for C++ with minimal dependencies.
+* [kiero](https://github.com/Rebzzel/kiero) - Universal graphical hook for a D3D9-D3D12, OpenGL and Vulkan based games.
+* [json](https://github.com/nlohmann/json) - JSON for Modern C++.
