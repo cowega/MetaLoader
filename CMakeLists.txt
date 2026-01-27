@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 cmake_policy(VERSION 3.15)
 
-project(MetaLoader VERSION 2.1.0 LANGUAGES CXX)
+project(MetaLoader VERSION 2.2.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

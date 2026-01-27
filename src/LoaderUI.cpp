@@ -1,6 +1,7 @@
 #include "LoaderUI.hpp"
 #include "fonts.hpp"
 #include "Loader.hpp"
+#include "Locales.hpp"
 
 #include "spdlog/spdlog.h"
 #include "utils.hpp"
@@ -18,6 +19,7 @@ LoaderUI::LoaderUI(ModLoadOrder* mlo) {
     } while (!areHooksInit);
 
     if (!this->mlo) this->mlo = mlo;
+    if (!this->loc) this->loc = new Localization();
 }
 
 LoaderUI::~LoaderUI() {
@@ -30,6 +32,7 @@ LoaderUI::~LoaderUI() {
     }
 
     delete this->mlo;
+    delete this->loc;
     delete this->fonts;
     delete this->mainRenderTargetView;
     delete this->pContext;
@@ -169,13 +172,20 @@ HRESULT __stdcall LoaderUI::PresentHook(IDXGISwapChain* pSwapChain, UINT SyncInt
 }
 
 void LoaderUI::RenderMenu() {
-    static auto DrawTitle = []() {
+    auto DrawTitle = []() {
         float y = ImGui::GetCursorPosY();
         if (ImGui::Button(reinterpret_cast<const char*>(u8"\uf01e"))) mlo->Refresh();
-        Utils::UI::Hint("Перезагрузить список");
+        Utils::UI::Hint(LOC("RELOAD_LIST"));
         ImGui::SameLine();
         if (ImGui::Button(reinterpret_cast<const char*>(u8"\uf07b"))) Utils::openModFolder();
-        Utils::UI::Hint("Открыть папку с модами");
+        Utils::UI::Hint(LOC("OPEN_FOLDER"));
+        
+        ImGui::PushItemWidth(ImGui::CalcTextSize(LOC("SELECTED_LANG")).x + 40);
+        ImGui::SameLine();
+        static int selectedLang = loc->GetLang();
+        if (ImGui::Combo("##lang", &selectedLang, Locales::languages, IM_ARRAYSIZE(Locales::languages))) loc->SetLang(selectedLang);
+        ImGui::PopItemWidth();
+
         ImGui::SameLine(ImGui::GetWindowWidth() * 0.5 - ImGui::CalcTextSize("MetaLoader").x * 0.5, 0);
         ImGui::PushFont(LoaderUI::fonts->fontTitle);
         ImGui::SetCursorPosY(y - 2);
@@ -189,7 +199,7 @@ void LoaderUI::RenderMenu() {
         ImGui::Separator();
     };
 
-    static auto DrawFooter = []() {
+    auto DrawFooter = []() {
         ImGui::Separator();
         ImGui::PushFont(LoaderUI::fonts->fontSmall);
         ImGui::TextDisabled("MetaLoader v%s", VERSION);
@@ -205,9 +215,9 @@ void LoaderUI::RenderMenu() {
     auto& mods = mlo->GetModsForUI();
 
     DrawTitle();
-    ImGui::Text("Настройте приоритет загрузки модов");
+    ImGui::Text(LOC("MODS_LIST_TITLE"));
     ImGui::SameLine(0, 0);
-    Utils::UI::HelpMarker("Потяните за мод, чтобы изменить его позицию в списке\nИзменения вступят в силу после загрузки игрой ресурсов");
+    Utils::UI::HelpMarker(LOC("MODS_LIST_TITLE_TOOLTIP"));
     
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(ImGui::GetStyle().ItemSpacing.x, 0));
     if (ImGui::BeginChild("ModsList", ImVec2(-1, 300))) {
