@@ -4,10 +4,14 @@
 
 class Localization {
 private:
-    int langIndex = 0;
+    int langIndex;
 
 public:
+    Localization();
+    ~Localization();
+
     std::string Get(const char* key);
     void SetLang(int index);
     int GetLang();
+
 };

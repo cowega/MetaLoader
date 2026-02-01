@@ -1,9 +1,8 @@
 #include "ModLoadOrder.hpp"
+#include "Loader.hpp"
 
 #include <fstream>
 #include <spdlog/spdlog.h>
-
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ModConfig, name, enabled);
 
 ModLoadOrder::ModLoadOrder() {
     this->LoadConfig();
@@ -38,31 +37,14 @@ void ModLoadOrder::Refresh() {
 }
 
 void ModLoadOrder::SaveConfig() {
-    json j;
-    j["mods"] = this->mods;
-    std::ofstream o("metaloader/settings.json");
-    if (o.is_open()) {
-        o << j.dump(4);
-        spdlog::info("Config saved to settings.json");
-    } else {
-        spdlog::error("Error to save config!");
-    }
+    Loader::settings->SetMods(this->mods);
 }
 
 void ModLoadOrder::LoadConfig() {
     this->mods.clear();
     bool changed = false;
-
-    if (!fs::exists("metaloader")) fs::create_directory("metaloader");
-
-    if (fs::exists("metaloader/settings.json")) {
-        std::ifstream f("metaloader/settings.json");
-        json j;
-        if (f >> j && j.contains("mods")) {
-            this->mods = j["mods"].get<std::vector<ModConfig>>();
-        }
-    }
-
+    this->mods = Loader::settings->GetMods();
+    
     auto it = this->mods.begin();
     while (it != this->mods.end()) {
         fs::path modPath = fs::path("metaloader") / it->name;

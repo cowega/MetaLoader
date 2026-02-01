@@ -4,6 +4,7 @@
 
 #include "GameHook.hpp"
 #include "LoaderUI.hpp"
+#include "Settings.hpp"
 
 #define VERSION "2.2.0"
 #define BUILD_DATE __DATE__
@@ -13,6 +14,7 @@ class Loader {
 public:
     static inline std::atomic<bool> g_isRun = true;
     static inline std::atomic<bool> g_isLoggerReady = false;
+    static inline Settings* settings;
 
 public:
     Loader();

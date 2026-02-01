@@ -12,6 +12,7 @@ Loader::Loader() {
     spdlog::info("Build: {} {}", BUILD_DATE, BUILD_TIME);
     spdlog::info("Current process: {}", Utils::GetCurrentProcessName());
 
+    if (!this->settings) this->settings = new Settings();
     this->hook = new GameHook(this->g_isRun);
     if (!this->g_isRun) return;
 
@@ -23,6 +24,7 @@ Loader::Loader() {
 Loader::~Loader() {
     delete this->hook;
     delete this->render;
+    delete this->settings;
     this->g_isRun = false;
 
     if (this->g_isLoggerReady) {
