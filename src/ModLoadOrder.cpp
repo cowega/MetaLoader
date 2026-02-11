@@ -21,7 +21,6 @@ std::string ModLoadOrder::GetFile(const std::string& virtualPath) {
 
     auto it = this->vfs.find(path);
     if (it != this->vfs.end()) {
-        spdlog::info("Redirect: {} -> {}", virtualPath, it->second.string());
         return it->second.string();
     }
     return "";
