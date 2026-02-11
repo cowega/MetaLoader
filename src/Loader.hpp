@@ -6,7 +6,7 @@
 #include "LoaderUI.hpp"
 #include "Settings.hpp"
 
-#define VERSION "2.2.0"
+#define VERSION "v2.2.0"
 #define BUILD_DATE __DATE__
 #define BUILD_TIME __TIME__
 

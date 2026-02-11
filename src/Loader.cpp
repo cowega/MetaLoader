@@ -8,7 +8,7 @@
 Loader::Loader() {
     this->InitLogger();
 
-    spdlog::info("Metaloader v{}", VERSION);
+    spdlog::info("Metaloader {}", VERSION);
     spdlog::info("Build: {} {}", BUILD_DATE, BUILD_TIME);
     spdlog::info("Current process: {}", Utils::GetCurrentProcessName());
 

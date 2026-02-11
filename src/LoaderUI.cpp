@@ -202,7 +202,7 @@ void LoaderUI::RenderMenu() {
     auto DrawFooter = []() {
         ImGui::Separator();
         ImGui::PushFont(LoaderUI::fonts->fontSmall);
-        ImGui::TextDisabled("MetaLoader v%s", VERSION);
+        ImGui::TextDisabled("MetaLoader %s", VERSION);
         ImGui::PopFont();
     };
 
