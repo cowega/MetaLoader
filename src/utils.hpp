@@ -9,6 +9,7 @@ namespace Utils {
     std::string GetCurrentProcessName();
     std::vector<fs::path> GetDirectories(const fs::path& path);
     void openModFolder();
+    HWND GetMyWindow();
 
     namespace Hook {
         struct MSVCString {

@@ -6,6 +6,10 @@
 extern "C" __declspec(dllexport) void DummyExport() { return; }
 
 void MainThread(HMODULE hModule) {
+    do {
+        Sleep(100);
+    } while (Utils::GetMyWindow() == NULL);
+
     Loader* loader = new Loader();
 
     while (Loader::g_isRun) {

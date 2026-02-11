@@ -40,6 +40,20 @@ namespace Utils {
         ShellExecuteW(NULL, L"explore", path.c_str(), NULL, NULL, SW_SHOWNORMAL);
     }
 
+    HWND GetMyWindow()  {
+        DWORD myPID = GetCurrentProcessId();
+        HWND hWnd = GetTopWindow(NULL); 
+
+        while (hWnd) {
+            DWORD pid = 0;
+            GetWindowThreadProcessId(hWnd, &pid);
+
+            if (pid == myPID && IsWindowVisible(hWnd)) return hWnd;
+            hWnd = GetWindow(hWnd, GW_HWNDNEXT);
+        }
+        return NULL;
+    }
+
     namespace Hook {
         void InitGameAllocator() {
             if (gameMalloc) return;
