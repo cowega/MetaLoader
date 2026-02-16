@@ -5,6 +5,7 @@
 #include "GameHook.hpp"
 #include "LoaderUI.hpp"
 #include "Settings.hpp"
+#include "Version.hpp"
 
 #define VERSION "v2.2.0"
 #define BUILD_DATE __DATE__
@@ -23,6 +24,7 @@ public:
 private:
     GameHook* hook = nullptr;
     LoaderUI* render = nullptr;
+    Version* version = nullptr;
 
 private:
     void InitLogger();

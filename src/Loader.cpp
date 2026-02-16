@@ -19,11 +19,15 @@ Loader::Loader() {
     this->g_isRun = hook->CreateHook();
 
     this->render = new LoaderUI(this->hook->mlo);
+    
+    this->version = new Version();
+    version->Check();
 }
 
 Loader::~Loader() {
     delete this->hook;
     delete this->render;
+    delete this->version;
     delete this->settings;
     this->g_isRun = false;
 
