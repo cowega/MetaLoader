@@ -21,7 +21,7 @@ public:
     ~ModLoadOrder();
 
     std::vector<ModConfig>& GetModsForUI();
-    std::string GetFile(const std::string& virtualPath);
+    const fs::path* GetFile(std::string_view virtualPath);
     void ApplyChanges();
     void Refresh();
 

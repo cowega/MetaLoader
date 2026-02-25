@@ -109,13 +109,9 @@ __int64 __fastcall GameHook::hkStat(void* pathPtr, void* statBuf) {
         std::string modKey(ws.begin(), ws.end());
 
         auto modPath = GameHook::mlo->GetFile(Utils::Hook::CutRawGamePath(modKey).string());
-        if (!modPath.empty()) {
-            modPath = fs::absolute(modPath).string();
-            std::replace(modPath.begin(), modPath.end(), '\\', '/');
-            spdlog::info("[hkStat]: {}", modPath);
-
-            std::wstring wmod(modPath.begin(), modPath.end());
-            return fnStat((void*)wmod.c_str(), statBuf);
+        if (modPath) {
+            std::wstring wAbs = modPath->wstring();
+            return fnStat((void*)wAbs.c_str(), statBuf);
         }
     }
 
@@ -125,22 +121,20 @@ __int64 __fastcall GameHook::hkStat(void* pathPtr, void* statBuf) {
 __int64 __fastcall GameHook::hkCompressedCreate(const char* originalPathObj, void** a2, unsigned int a3) {
     if (!originalPathObj || !GameHook::mlo) return fpCompressedCreate(originalPathObj, a2, a3);
 
-    auto modPath = GameHook::mlo->GetFile(Utils::Hook::CutRawGamePath(originalPathObj).string());
-    
-    if (modPath.empty()) return fpCompressedCreate(originalPathObj, a2, a3);
-    
-    alignas(16) char fakeObject[1024];
-    memset(fakeObject, 0, 1024);
+    const fs::path* modPath = GameHook::mlo->GetFile(Utils::Hook::CutRawGamePath(originalPathObj).string());
+    if (!modPath) return fpCompressedCreate(originalPathObj, a2, a3);
 
-    if (modPath.size() >= 511) {
-        if (Loader::g_isLoggerReady) {
-            spdlog::error("Path too long! ({}/511)", modPath.size());
-        }
+    std::string modPathStr = modPath->string();
+
+    if (modPathStr.size() >= 511) {
+        spdlog::error("Path too long! ({}/511)", modPathStr.size());
+        return fpCompressedCreate(originalPathObj, a2, a3);
     }
 
-    strcpy_s(fakeObject, 512, modPath.c_str());
-    *(size_t*)(fakeObject + 512) = modPath.length();
+    alignas(16) char fakeObject[1024];
+    memset(fakeObject, 0, sizeof(fakeObject));
+    strcpy_s(fakeObject, 512, modPathStr.c_str());
+    *(size_t*)(fakeObject + 512) = modPathStr.length();
 
-    spdlog::info("[hkCompressedCreate]: {}", modPath);
     return fpCompressedCreate(fakeObject, a2, a3);
 }

@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include <spdlog/spdlog.h>
+#include <string_view>
 
 ModLoadOrder::ModLoadOrder() {
     this->LoadConfig();
@@ -14,16 +15,18 @@ std::vector<ModConfig>& ModLoadOrder::GetModsForUI() {
     return this->mods;
 }
 
-std::string ModLoadOrder::GetFile(const std::string& virtualPath) {
-    std::string path = virtualPath; 
-    std::replace(path.begin(), path.end(), '\\', '/');
-    std::transform(path.begin(), path.end(), path.begin(), ::tolower);
+const fs::path* ModLoadOrder::GetFile(std::string_view virtualPath) {
+    thread_local std::string key;
+    key.assign(virtualPath);
 
-    auto it = this->vfs.find(path);
-    if (it != this->vfs.end()) {
-        return it->second.string();
+    for (char& c : key) {
+        if (c == '\\') c = '/';
+        if (c >= 'A' && c <= 'Z') c = char(c + ('a' - 'A'));
     }
-    return "";
+
+    auto it = vfs.find(key);
+    if (it != vfs.end()) return &it->second;
+    return 0;
 }
 
 void ModLoadOrder::ApplyChanges() {
@@ -91,9 +94,12 @@ void ModLoadOrder::RebuildVFS() {
         for (const auto& entry : fs::recursive_directory_iterator(modPath)) {
             if (entry.is_regular_file()) {
                 std::string key = fs::relative(entry.path(), modPath).generic_string();
-                std::transform(key.begin(), key.end(), key.begin(), ::tolower);
+                for (char& c : key) {
+                    if (c == '\\') c = '/';
+                    if (c >= 'A' && c <= 'Z') c = char(c + ('a' - 'A'));
+                }
 
-                this->vfs[key] = entry.path();
+                this->vfs[key] = fs::absolute(entry.path());
             }
         }
     }
