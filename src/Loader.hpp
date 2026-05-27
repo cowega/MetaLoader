@@ -7,7 +7,7 @@
 #include "Settings.hpp"
 #include "Version.hpp"
 
-#define VERSION "v2.3.0"
+#define VERSION "v2.3.1"
 #define BUILD_DATE __DATE__
 #define BUILD_TIME __TIME__
 
