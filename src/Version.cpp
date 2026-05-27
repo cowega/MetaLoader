@@ -8,6 +8,11 @@
 
 #include "Version.hpp"
 #include "Loader.hpp"
+#include "utils.hpp"
+
+#ifndef WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_2
+#define WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_2 0x00000800
+#endif
 
 Version::Version() { }
 
@@ -27,7 +32,7 @@ void Version::Check() {
         spdlog::warn("You are using an outdated version of MetaLoader!");
 
         MessageBoxW(
-            GetActiveWindow(),
+            Utils::GetMyWindow(),
             L"You are using an outdated version of MetaLoader.\n\n"
             L"A newer version is available at:\n"
             L"github.com/cowega/MetaLoader\n\n"
@@ -41,57 +46,51 @@ void Version::Check() {
 }
 
 std::string Version::GetLatestTag() {
-    HINTERNET session = WinHttpOpen(L"metaloader/1.0",
+    HINTERNET session = WinHttpOpen(L"Mozilla/5.0 (Windows NT 10.0; Win64; x64) MetaLoader/2.3",
         WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
         WINHTTP_NO_PROXY_NAME,
         WINHTTP_NO_PROXY_BYPASS, 0);
 
     if (!session) return {};
 
-    HINTERNET connect = WinHttpConnect(session,
-        L"api.github.com",
-        INTERNET_DEFAULT_HTTPS_PORT, 0);
+    WinHttpSetTimeouts(session, 10000, 10000, 10000, 10000);
 
-    if (!connect) return {};
+    DWORD protocols = WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_2;
+    WinHttpSetOption(session, WINHTTP_OPTION_SECURE_PROTOCOLS, &protocols, sizeof(protocols));
 
-    HINTERNET request = WinHttpOpenRequest(connect,
-        L"GET",
-        L"/repos/cowega/metaloader/releases/latest",
-        nullptr,
-        WINHTTP_NO_REFERER,
-        WINHTTP_DEFAULT_ACCEPT_TYPES,
-        WINHTTP_FLAG_SECURE);
+    HINTERNET connect = WinHttpConnect(session, L"api.github.com", INTERNET_DEFAULT_HTTPS_PORT, 0);
+    if (!connect) { WinHttpCloseHandle(session); return {}; }
 
-    if (!request) return {};
+    HINTERNET request = WinHttpOpenRequest(connect, L"GET", L"/repos/cowega/metaloader/releases/latest",
+        nullptr, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
 
-    WinHttpAddRequestHeaders(request,
-        L"User-Agent: metaloader\r\nAccept: application/vnd.github+json\r\n",
-        -1, WINHTTP_ADDREQ_FLAG_ADD);
+    if (!request) { WinHttpCloseHandle(connect); WinHttpCloseHandle(session); return {}; }
 
-    if (!WinHttpSendRequest(request, 0, 0, 0, 0, 0, 0))
+    WinHttpAddRequestHeaders(request, L"Accept: application/vnd.github.v3+json\r\n", -1, WINHTTP_ADDREQ_FLAG_ADD);
+
+    if (!WinHttpSendRequest(request, 0, 0, 0, 0, 0, 0)) {
+        WinHttpCloseHandle(request); WinHttpCloseHandle(connect); WinHttpCloseHandle(session);
         return {};
+    }
 
-    if (!WinHttpReceiveResponse(request, nullptr))
+    if (!WinHttpReceiveResponse(request, nullptr)) {
+        WinHttpCloseHandle(request); WinHttpCloseHandle(connect); WinHttpCloseHandle(session);
         return {};
+    }
 
     std::string response;
-    DWORD size = 0;
+    char buffer[4096];
+    DWORD downloaded = 0;
 
-    do {
-        WinHttpQueryDataAvailable(request, &size);
-        if (!size) break;
-
-        std::vector<char> buffer(size);
-        DWORD downloaded = 0;
-
-        WinHttpReadData(request, buffer.data(), size, &downloaded);
-        response.append(buffer.data(), downloaded);
-
-    } while (size > 0);
+    while (WinHttpReadData(request, buffer, sizeof(buffer), &downloaded) && downloaded > 0) {
+        response.append(buffer, downloaded);
+    }
 
     WinHttpCloseHandle(request);
     WinHttpCloseHandle(connect);
     WinHttpCloseHandle(session);
+
+    if (response.empty()) return {};
 
     try {
         auto json = nlohmann::json::parse(response);
@@ -102,14 +101,22 @@ std::string Version::GetLatestTag() {
 }
 
 bool Version::ParseVersion(std::string tag, Version_& version) {
-    return std::sscanf(tag.c_str(), "v%d.%d.%d", &version.major, &version.minor, &version.patch) == 3;
+    const char* ptr = tag.c_str();
+    if (*ptr == 'v' || *ptr == 'V') ptr++;
+    if (*ptr == '.') ptr++; 
+
+    return std::sscanf(ptr, "%d.%d.%d", &version.major, &version.minor, &version.patch) == 3;
 }
 
 bool Version::GetLatestVersion(Version_& version) {
     std::string tag = Version::GetLatestTag();
     
-    if (tag.empty())
+    if (tag.empty()) {
+        spdlog::error("Failed to fetch latest version tag from GitHub");
         return 0;
+    }
+
+    spdlog::info("Latest version tag on GitHub: {}", tag);
     
     return this->ParseVersion(tag, version);
 }

@@ -8,6 +8,9 @@
 Loader::Loader() {
     this->InitLogger();
 
+    this->version = new Version();
+    version->Check();
+
     spdlog::info("Metaloader {}", VERSION);
     spdlog::info("Build: {} {}", BUILD_DATE, BUILD_TIME);
     spdlog::info("Current process: {}", Utils::GetCurrentProcessName());
@@ -19,9 +22,6 @@ Loader::Loader() {
     this->g_isRun = hook->CreateHook();
 
     this->render = new LoaderUI(this->hook->mlo);
-    
-    this->version = new Version();
-    version->Check();
 }
 
 Loader::~Loader() {
