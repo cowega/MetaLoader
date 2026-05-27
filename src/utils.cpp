@@ -1,9 +1,11 @@
-#include <filesystem>
 #include <windows.h>
 #include <unordered_map>
 #include <shellapi.h>
 #include <filesystem>
 #include <string>
+#include <algorithm>
+#include <cstdint>
+#include <cstring>
 #include <spdlog/spdlog.h>
 
 #include "utils.hpp"
@@ -159,5 +161,62 @@ namespace Utils {
 
             return clicked;
         }
+    }
+
+    uintptr_t FindXRef(const std::string& stringTarget) {
+        HMODULE hMod = GetModuleHandle(nullptr);
+        if (!hMod) return 0;
+
+        uintptr_t base = (uintptr_t)hMod;
+        PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)base;
+        PIMAGE_NT_HEADERS ntHeaders = (PIMAGE_NT_HEADERS)(base + dosHeader->e_lfanew);
+        PIMAGE_SECTION_HEADER sectionHeader = IMAGE_FIRST_SECTION(ntHeaders);
+
+        uintptr_t stringAddress = 0;
+
+        for (int i = 0; i < ntHeaders->FileHeader.NumberOfSections; i++) {
+            auto& section = sectionHeader[i];
+            char name[IMAGE_SIZEOF_SHORT_NAME + 1] = { 0 };
+            memcpy(name, section.Name, IMAGE_SIZEOF_SHORT_NAME);
+
+            if (strcmp(name, ".rdata") == 0 || strcmp(name, ".data") == 0) {
+                uintptr_t start = base + section.VirtualAddress;
+                uintptr_t end = start + section.SizeOfRawData;
+
+                for (uintptr_t addr = start; addr < end - stringTarget.length(); addr++) {
+                    if (memcmp((void*)addr, stringTarget.c_str(), stringTarget.length() + 1) == 0) {
+                        stringAddress = addr;
+                        break;
+                    }
+                }
+            }
+            if (stringAddress) break;
+        }
+
+        if (!stringAddress) return 0;
+
+        for (int i = 0; i < ntHeaders->FileHeader.NumberOfSections; i++) {
+            auto& section = sectionHeader[i];
+            char name[IMAGE_SIZEOF_SHORT_NAME + 1] = { 0 };
+            memcpy(name, section.Name, IMAGE_SIZEOF_SHORT_NAME);
+
+            if (strcmp(name, ".text") == 0) {
+                uintptr_t start = base + section.VirtualAddress;
+                uintptr_t end = start + section.SizeOfRawData;
+
+                for (uintptr_t addr = start; addr < end - 7; addr++) {
+                    uint8_t* ptr = (uint8_t*)addr;
+                    if ((ptr[0] == 0x48 || ptr[0] == 0x4C) && (ptr[1] == 0x8D || ptr[1] == 0x8B)) {
+                        if ((ptr[2] & 0xC7) == 0x05) {
+                            int32_t offset = *(int32_t*)(addr + 3);
+                            uintptr_t target = addr + 7 + offset;
+                            if (target == stringAddress) return addr;
+                        }
+                    }
+                }
+            }
+        }
+
+        return 0;
     }
 }

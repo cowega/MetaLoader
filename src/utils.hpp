@@ -10,6 +10,7 @@ namespace Utils {
     std::vector<fs::path> GetDirectories(const fs::path& path);
     void openModFolder();
     HWND GetMyWindow();
+    uintptr_t FindXRef(const std::string& stringTarget);
 
     namespace Hook {
         fs::path CutRawGamePath(const fs::path& fullPath);
