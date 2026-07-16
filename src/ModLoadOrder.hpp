@@ -22,6 +22,7 @@ public:
 
     std::vector<ModConfig>& GetModsForUI();
     const fs::path* GetFile(std::string_view virtualPath);
+    void ProcessAllZipFiles();
     void ApplyChanges();
     void Refresh();
 

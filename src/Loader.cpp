@@ -4,6 +4,7 @@
 
 #include "Loader.hpp"
 #include "utils.hpp"
+#include "ZipManager.hpp"
 
 Loader::Loader() {
     this->InitLogger();
@@ -15,6 +16,7 @@ Loader::Loader() {
     spdlog::info("Build: {} {}", BUILD_DATE, BUILD_TIME);
     spdlog::info("Current process: {}", Utils::GetCurrentProcessName());
 
+    if (!this->zip) this->zip = new ZipManager();
     if (!this->settings) this->settings = new Settings();
     this->hook = new GameHook(this->g_isRun);
     if (!this->g_isRun) return;
@@ -29,6 +31,7 @@ Loader::~Loader() {
     delete this->render;
     delete this->version;
     delete this->settings;
+    delete this->zip;
     this->g_isRun = false;
 
     if (this->g_isLoggerReady) {

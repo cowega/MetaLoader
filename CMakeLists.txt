@@ -10,6 +10,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 
 include(FetchContent)
 
@@ -42,7 +43,14 @@ FetchContent_Declare(
     GIT_TAG        2bb9d59fdeeb8784764267e13e2ae3ab6897cb25
 )
 
-FetchContent_MakeAvailable(minhook spdlog sigsearch json)
+FetchContent_Declare(
+    miniz-cpp
+    GIT_REPOSITORY https://github.com/tfussell/miniz-cpp.git
+    GIT_TAG        052335e4f7773368df07b26d2baedb0e6d4dbd38
+)
+set(MINIZ_CPP_BUILD_TESTS OFF CACHE INTERNAL "")
+
+FetchContent_MakeAvailable(minhook spdlog sigsearch json miniz-cpp)
 
 file(GLOB_RECURSE SOURCES
     "src/*.cpp" "src/*.h"
@@ -55,6 +63,7 @@ add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE
     src
     ${sigsearch_SOURCE_DIR}
+    ${miniz-cpp_SOURCE_DIR}
     "third-party/imgui"
     "third-party/kiero"
 )
@@ -81,4 +90,6 @@ set_target_properties(${PROJECT_NAME}
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     WIN32_LEAN_AND_MEAN
     NOMINMAX
+    MINIZ_STATIC_FUNCTIONS
+    MINIZ_CPP_HEADER_ONLY
 )
