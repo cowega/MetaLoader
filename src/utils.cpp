@@ -56,6 +56,15 @@ namespace Utils {
         return NULL;
     }
 
+    bool HasCyrillic(const std::wstring& text) {
+        for (wchar_t wc : text) {
+            if (wc >= 0x0400 && wc <= 0x04FF) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     namespace Hook {
         fs::path CutRawGamePath(const fs::path& fullPath) {
             fs::path result;

@@ -11,6 +11,7 @@ namespace Utils {
     void openModFolder();
     HWND GetMyWindow();
     uintptr_t FindXRef(const std::string& stringTarget);
+    bool HasCyrillic(const std::wstring& text);
 
     namespace Hook {
         fs::path CutRawGamePath(const fs::path& fullPath);

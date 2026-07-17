@@ -1,6 +1,7 @@
 #include "ModLoadOrder.hpp"
 #include "Loader.hpp"
 #include "ZipManager.hpp"
+#include "utils.hpp"
 
 #include <fstream>
 #include <spdlog/spdlog.h>
@@ -91,6 +92,11 @@ void ModLoadOrder::LoadConfig() {
     for (const auto& entry : fs::directory_iterator("metaloader")) {
         if (entry.is_directory()) {
             std::string name = entry.path().filename().string();
+
+            if (Utils::HasCyrillic(entry.path().filename().wstring())) {
+                spdlog::warn("Mod \"{}\" skipped: Cyrillic in name. Rename folder to English to load.", name);
+                continue;
+            }
             
             auto it = std::find_if(this->mods.begin(), this->mods.end(), 
                 [&](const ModConfig& m){ return m.name == name; });
