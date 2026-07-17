@@ -13,7 +13,7 @@
 4. Enjoy!
 
 ## Usage
-After installation, simply place your mod files into the `metaloader` folder. The loader will automatically inject them when the game starts.
+After installation, place the ZIP archive with the mod in the `metaloader` folder. The loader will automatically inject them when the game starts.
 
 > To open the mod priority management menu, press `Insert` in the game.
 
@@ -50,3 +50,4 @@ Distributed under the MIT License. See `LICENSE` for more information.
 * [ImGui](https://github.com/ocornut/imgui) - Bloat-free Graphical User interface for C++ with minimal dependencies.
 * [kiero](https://github.com/Rebzzel/kiero) - Universal graphical hook for a D3D9-D3D12, OpenGL and Vulkan based games.
 * [json](https://github.com/nlohmann/json) - JSON for Modern C++.
+* [miniz-cpp](https://github.com/tfussell/miniz-cpp) - A cross-platform header-only C++14 library for reading and writing ZIP files.
