@@ -14,7 +14,9 @@ namespace Utils {
     bool HasCyrillic(const std::wstring& text);
 
     namespace Hook {
-        fs::path CutRawGamePath(const fs::path& fullPath);
+        fs::path CutRawGamePath_old(const fs::path& fullPath);
+        size_t FindDir(std::string_view path, std::string_view dir);
+        std::string_view CutRawGamePath(std::string_view fullPath, char* outBuffer, size_t bufferSize);
     }
 
     namespace UI {

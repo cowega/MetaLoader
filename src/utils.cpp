@@ -66,7 +66,7 @@ namespace Utils {
     }
 
     namespace Hook {
-        fs::path CutRawGamePath(const fs::path& fullPath) {
+        fs::path CutRawGamePath_old(const fs::path& fullPath) {
             fs::path result;
             bool found = false;
             for (const auto& part : fullPath) {
@@ -85,6 +85,47 @@ namespace Utils {
                 if (found) result /= part;
             }
             return result;
+        }
+
+        size_t FindDir(std::string_view path, std::string_view dir) {
+            size_t pos = 0;
+            while ((pos = path.find(dir, pos)) != std::string_view::npos) {
+                bool validStart = (pos == 0 || path[pos - 1] == '/' || path[pos - 1] == '\\');
+                bool validEnd = (pos + dir.length() == path.length() || path[pos + dir.length()] == '/' || path[pos + dir.length()] == '\\');
+                
+                if (validStart && validEnd) {
+                    return pos;
+                }
+                pos += dir.length();
+            }
+            return std::string_view::npos;
+        }
+
+        std::string_view CutRawGamePath(std::string_view fullPath, char* outBuffer, size_t bufferSize) {
+            size_t posData = FindDir(fullPath, "Data");
+            size_t posPacks = FindDir(fullPath, "packs");
+            
+            size_t firstPos = (posData < posPacks) ? posData : posPacks;
+
+            if (firstPos == std::string_view::npos) {
+                return {};
+            }
+
+            std::string_view rest = (firstPos == posData) ? fullPath.substr(posData + 4) : fullPath.substr(posPacks + 5);
+            size_t requiredSize = 4 + rest.length();
+            
+            if (requiredSize >= bufferSize) {
+                return {};
+            }
+
+            memcpy(outBuffer, "Data", 4);
+            
+            for (size_t i = 0; i < rest.length(); ++i) {
+                char c = rest[i];
+                outBuffer[4 + i] = (c == '\\') ? '/' : c;
+            }
+
+            return std::string_view(outBuffer, requiredSize);
         }
     }
 

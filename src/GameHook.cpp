@@ -78,47 +78,67 @@ bool GameHook::CreateHook() {
 }
 
 __int64 __fastcall GameHook::hkStat(void* pathObj) {
-    if (!pathObj || !GameHook::mlo) return fnStat(pathObj);
-
-    const char* originalPathStr = reinterpret_cast<const char*>(pathObj);
-    const fs::path* modPath = GameHook::mlo->GetFile(Utils::Hook::CutRawGamePath(originalPathStr).string());
-
-    if (!modPath) return fnStat(pathObj);
-
-    std::string modPathStr = modPath->string();
-    spdlog::info("Stat: {} -> {}", originalPathStr, modPathStr);
-
-    if (modPathStr.size() >= 511) {
-        spdlog::error("Path too long in Stat! ({}/511)", modPathStr.size());
+    if (!pathObj || !GameHook::mlo) {
         return fnStat(pathObj);
     }
 
-    alignas(16) char fakeObject[1024];
-    memset(fakeObject, 0, sizeof(fakeObject));
-    strcpy_s(fakeObject, 512, modPathStr.c_str());
-    *(size_t*)(fakeObject + 512) = modPathStr.length();
+    std::string_view rawPath(reinterpret_cast<const char*>(pathObj));
+    char virtualPathBuf[512];
+    
+    std::string_view virtualPath = Utils::Hook::CutRawGamePath(rawPath, virtualPathBuf, sizeof(virtualPathBuf));
+    if (virtualPath.empty()) {
+        return fnStat(pathObj);
+    }
+
+    const fs::path* modPath = GameHook::mlo->GetFile(virtualPath);
+    if (!modPath) {
+        return fnStat(pathObj);
+    }
+
+    std::string modPathStr = modPath->string(); 
+    size_t pathLen = modPathStr.length();
+
+    if (pathLen >= 511) {
+        spdlog::error("Path too long in Stat! ({}/511)", pathLen);
+        return fnStat(pathObj);
+    }
+
+    alignas(16) char fakeObject[1024]; 
+    memcpy(fakeObject, modPathStr.data(), pathLen + 1);
+    *reinterpret_cast<size_t*>(fakeObject + 512) = pathLen;
 
     return fnStat(fakeObject);
 }
 
 __int64 __fastcall GameHook::hkCompressedCreate(const char* originalPathObj, void** a2, unsigned int a3) {
-    if (!originalPathObj || !GameHook::mlo) return fpCompressedCreate(originalPathObj, a2, a3);
-
-    const fs::path* modPath = GameHook::mlo->GetFile(Utils::Hook::CutRawGamePath(originalPathObj).string());
-    if (!modPath) return fpCompressedCreate(originalPathObj, a2, a3);
-
-    std::string modPathStr = modPath->string();
-    spdlog::info("CompressedCreate: {} -> {}", originalPathObj, modPathStr);
-
-    if (modPathStr.size() >= 511) {
-        spdlog::error("Path too long! ({}/511)", modPathStr.size());
+    if (!originalPathObj || !GameHook::mlo) {
         return fpCompressedCreate(originalPathObj, a2, a3);
     }
 
-    alignas(16) char fakeObject[1024];
-    memset(fakeObject, 0, sizeof(fakeObject));
-    strcpy_s(fakeObject, 512, modPathStr.c_str());
-    *(size_t*)(fakeObject + 512) = modPathStr.length();
+    std::string_view rawPath(originalPathObj);
+    char virtualPathBuf[512];
+    
+    std::string_view virtualPath = Utils::Hook::CutRawGamePath(rawPath, virtualPathBuf, sizeof(virtualPathBuf));
+    if (virtualPath.empty()) {
+        return fpCompressedCreate(originalPathObj, a2, a3);
+    }
+
+    const fs::path* modPath = GameHook::mlo->GetFile(virtualPath);
+    if (!modPath) {
+        return fpCompressedCreate(originalPathObj, a2, a3);
+    }
+
+    std::string modPathStr = modPath->string(); 
+    size_t pathLen = modPathStr.length();
+
+    if (pathLen >= 511) {
+        spdlog::error("Path too long in CompressedCreate! ({}/511)", pathLen);
+        return fpCompressedCreate(originalPathObj, a2, a3);
+    }
+
+    alignas(16) char fakeObject[1024]; 
+    memcpy(fakeObject, modPathStr.data(), pathLen + 1);
+    *reinterpret_cast<size_t*>(fakeObject + 512) = pathLen;
 
     return fpCompressedCreate(fakeObject, a2, a3);
 }
