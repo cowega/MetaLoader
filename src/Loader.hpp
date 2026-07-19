@@ -6,7 +6,7 @@
 #include "LoaderUI.hpp"
 #include "Settings.hpp"
 #include "Version.hpp"
-#define VERSION "v2.3.1"
+#define VERSION "v2.4.0"
 
 class ZipManager;
 #define BUILD_DATE __DATE__
