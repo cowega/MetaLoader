@@ -12,8 +12,8 @@ namespace Locales {
             {"en", "Configure mod load priority"}
         }},
         {"RELOAD_LIST", {
-            {"ru", "Перезагрузить список"},
-            {"en", "Reload list"}
+            {"ru", "Перезагрузить список\nМожет вызвать зависание"},
+            {"en", "Reload list\nMay cause freeze"}
         }},
         {"OPEN_FOLDER", {
             {"ru", "Открыть папку с модами"},
