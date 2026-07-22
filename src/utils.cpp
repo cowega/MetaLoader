@@ -102,27 +102,49 @@ namespace Utils {
         }
 
         std::string_view CutRawGamePath(std::string_view fullPath, char* outBuffer, size_t bufferSize) {
-            size_t posData = FindDir(fullPath, "Data");
-            size_t posPacks = FindDir(fullPath, "packs");
-            
-            size_t firstPos = (posData < posPacks) ? posData : posPacks;
+            size_t pos = std::string_view::npos;
+            size_t skipLen = 0;
 
-            if (firstPos == std::string_view::npos) {
+            size_t posData = fullPath.rfind("Data");
+            if (posData != std::string_view::npos) {
+                bool validStart = (posData == 0 || fullPath[posData - 1] == '/' || fullPath[posData - 1] == '\\');
+                bool validEnd = (posData + 4 == fullPath.length() || fullPath[posData + 4] == '/' || fullPath[posData + 4] == '\\');
+                if (validStart && validEnd) {
+                    pos = posData;
+                    skipLen = 4;
+                }
+            }
+
+            if (pos == std::string_view::npos) {
+                size_t posPacks = fullPath.rfind("packs");
+                if (posPacks != std::string_view::npos) {
+                    bool validStart = (posPacks == 0 || fullPath[posPacks - 1] == '/' || fullPath[posPacks - 1] == '\\');
+                    bool validEnd = (posPacks + 5 == fullPath.length() || fullPath[posPacks + 5] == '/' || fullPath[posPacks + 5] == '\\');
+                    if (validStart && validEnd) {
+                        pos = posPacks;
+                        skipLen = 5;
+                    }
+                }
+            }
+
+            if (pos == std::string_view::npos) {
                 return {};
             }
 
-            std::string_view rest = (firstPos == posData) ? fullPath.substr(posData + 4) : fullPath.substr(posPacks + 5);
+            std::string_view rest = fullPath.substr(pos + skipLen);
             size_t requiredSize = 4 + rest.length();
             
             if (requiredSize >= bufferSize) {
                 return {};
             }
 
-            memcpy(outBuffer, "Data", 4);
+            memcpy(outBuffer, "data", 4);
             
             for (size_t i = 0; i < rest.length(); ++i) {
                 char c = rest[i];
-                outBuffer[4 + i] = (c == '\\') ? '/' : c;
+                if (c == '\\') c = '/';
+                if (c >= 'A' && c <= 'Z') c = char(c + ('a' - 'A'));
+                outBuffer[4 + i] = c;
             }
 
             return std::string_view(outBuffer, requiredSize);

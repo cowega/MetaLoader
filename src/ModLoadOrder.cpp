@@ -17,18 +17,12 @@ std::vector<ModConfig>& ModLoadOrder::GetModsForUI() {
     return this->mods;
 }
 
-const fs::path* ModLoadOrder::GetFile(std::string_view virtualPath) {
-    thread_local std::string key;
-    key.assign(virtualPath);
-
-    for (char& c : key) {
-        if (c == '\\') c = '/';
-        if (c >= 'A' && c <= 'Z') c = char(c + ('a' - 'A'));
+const std::string_view ModLoadOrder::GetFile(std::string_view virtualPath) {
+    auto it = vfs.find(virtualPath); 
+    if (it != vfs.end()) {
+        return it->second;
     }
-
-    auto it = vfs.find(key);
-    if (it != vfs.end()) return &it->second;
-    return 0;
+    return {};
 }
 
 void ModLoadOrder::ApplyChanges() {
@@ -134,7 +128,7 @@ void ModLoadOrder::RebuildVFS() {
                     if (c >= 'A' && c <= 'Z') c = char(c + ('a' - 'A'));
                 }
 
-                this->vfs[key] = fs::absolute(entry.path());
+                this->vfs[key] = fs::absolute(entry.path()).string();
             }
         }
     }

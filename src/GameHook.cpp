@@ -90,12 +90,11 @@ __int64 __fastcall GameHook::hkStat(void* pathObj) {
         return fnStat(pathObj);
     }
 
-    const fs::path* modPath = GameHook::mlo->GetFile(virtualPath);
-    if (!modPath) {
+    std::string_view modPathStr = GameHook::mlo->GetFile(virtualPath);
+    if (modPathStr.empty()) {
         return fnStat(pathObj);
     }
 
-    std::string modPathStr = modPath->string(); 
     size_t pathLen = modPathStr.length();
 
     if (pathLen >= 511) {
@@ -103,10 +102,10 @@ __int64 __fastcall GameHook::hkStat(void* pathObj) {
         return fnStat(pathObj);
     }
 
-    alignas(16) char fakeObject[1024]; 
+    alignas(16) char fakeObject[1024] = {0};
     memcpy(fakeObject, modPathStr.data(), pathLen + 1);
     *reinterpret_cast<size_t*>(fakeObject + 512) = pathLen;
-
+    
     return fnStat(fakeObject);
 }
 
@@ -123,12 +122,11 @@ __int64 __fastcall GameHook::hkCompressedCreate(const char* originalPathObj, voi
         return fpCompressedCreate(originalPathObj, a2, a3);
     }
 
-    const fs::path* modPath = GameHook::mlo->GetFile(virtualPath);
-    if (!modPath) {
+    std::string_view modPathStr = GameHook::mlo->GetFile(virtualPath);
+    if (modPathStr.empty()) {
         return fpCompressedCreate(originalPathObj, a2, a3);
     }
 
-    std::string modPathStr = modPath->string(); 
     size_t pathLen = modPathStr.length();
 
     if (pathLen >= 511) {
@@ -136,7 +134,7 @@ __int64 __fastcall GameHook::hkCompressedCreate(const char* originalPathObj, voi
         return fpCompressedCreate(originalPathObj, a2, a3);
     }
 
-    alignas(16) char fakeObject[1024]; 
+    alignas(16) char fakeObject[1024] = {0};
     memcpy(fakeObject, modPathStr.data(), pathLen + 1);
     *reinterpret_cast<size_t*>(fakeObject + 512) = pathLen;
 
