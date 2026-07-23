@@ -74,7 +74,7 @@ void ModLoadOrder::LoadConfig() {
     auto it = this->mods.begin();
     while (it != this->mods.end()) {
         fs::path modPath = fs::path("metaloader") / it->name;
-        if (!fs::exists(modPath)) {
+        if (!fs::exists(modPath) || !fs::is_directory(modPath)) {
             spdlog::info("Removing non-existent mod: {}", it->name);
             it = this->mods.erase(it);
             changed = true;
@@ -96,11 +96,34 @@ void ModLoadOrder::LoadConfig() {
                 [&](const ModConfig& m){ return m.name == name; });
 
             if (it == this->mods.end()) {
-                this->mods.push_back({name, true});
+                spdlog::info("Found new mod folder: {}", name);
+                this->mods.push_back({name, {}, true});
                 changed = true;
             }
         }
     }
+
+    for (auto& mod : this->mods) {
+        std::vector<std::string> newAssets;
+        
+        fs::path modDataPath = fs::path("metaloader") / mod.name / "data";
+
+        if (fs::exists(modDataPath) && fs::is_directory(modDataPath)) {
+            for (const auto& file : fs::recursive_directory_iterator(modDataPath)) {
+                if (file.is_regular_file()) {
+                    fs::path relativePath = fs::relative(file.path(), fs::path("metaloader") / mod.name);
+                    
+                    newAssets.push_back(relativePath.generic_string());
+                }
+            }
+        }
+
+        if (mod.assets != newAssets) {
+            mod.assets = std::move(newAssets);
+            changed = true;
+        }
+    }
+
     if (changed) this->SaveConfig();
 
     this->RebuildVFS();
@@ -108,7 +131,6 @@ void ModLoadOrder::LoadConfig() {
 
 void ModLoadOrder::RebuildVFS() {
     this->vfs.clear();
-    auto modsCopy = this->mods;
 
     for (auto it = this->mods.rbegin(); it != this->mods.rend(); it++) {
         auto& mod = *it;
@@ -120,16 +142,14 @@ void ModLoadOrder::RebuildVFS() {
             continue;
         }
 
-        for (const auto& entry : fs::recursive_directory_iterator(modPath)) {
-            if (entry.is_regular_file()) {
-                std::string key = fs::relative(entry.path(), modPath).generic_string();
-                for (char& c : key) {
-                    if (c == '\\') c = '/';
-                    if (c >= 'A' && c <= 'Z') c = char(c + ('a' - 'A'));
-                }
-
-                this->vfs[key] = fs::absolute(entry.path()).string();
+        for (const auto& assetRelativePath : mod.assets) {
+            std::string key = assetRelativePath;
+            for (char& c : key) {
+                if (c >= 'A' && c <= 'Z') c = char(c + ('a' - 'A'));
             }
+            
+            fs::path filePath = modPath / assetRelativePath;
+            this->vfs[key] = fs::absolute(filePath).string();
         }
     }
 }

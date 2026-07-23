@@ -9,6 +9,7 @@ using json = nlohmann::json;
 
 struct ModConfig {
     std::string name;
+    std::vector<std::string> assets;
     bool enabled;
 };
 
