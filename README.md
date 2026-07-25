@@ -51,3 +51,4 @@ Distributed under the MIT License. See `LICENSE` for more information.
 * [kiero](https://github.com/Rebzzel/kiero) - Universal graphical hook for a D3D9-D3D12, OpenGL and Vulkan based games.
 * [json](https://github.com/nlohmann/json) - JSON for Modern C++.
 * [miniz-cpp](https://github.com/tfussell/miniz-cpp) - A cross-platform header-only C++14 library for reading and writing ZIP files.
+* [ImGuiNotify](https://github.com/TyomaVader/ImGuiNotify) - A simple notification wrapper for Dear ImGui.

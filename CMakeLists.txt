@@ -56,6 +56,7 @@ file(GLOB_RECURSE SOURCES
     "src/*.cpp" "src/*.h"
     "third-party/imgui/*.cpp" "third-party/imgui/*.h"
     "third-party/kiero/*.cpp" "third-party/kiero/*.h"
+    "third-party/ImGuiNotify/*.hpp" "third-party/ImGuiNotify/*.h"
 )
 
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
@@ -66,6 +67,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${miniz-cpp_SOURCE_DIR}
     "third-party/imgui"
     "third-party/kiero"
+    "third-party/ImGuiNotify"
 )
 
 target_link_libraries(${PROJECT_NAME} 

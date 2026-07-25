@@ -2,6 +2,7 @@
 #include "Loader.hpp"
 #include "ZipManager.hpp"
 #include "utils.hpp"
+#include "LoaderUI.hpp"
 
 #include <fstream>
 #include <spdlog/spdlog.h>
@@ -68,6 +69,9 @@ void ModLoadOrder::ProcessAllZipFiles() {
 void ModLoadOrder::LoadConfig() {
     this->mods.clear();
     bool changed = false;
+    int newModsCount = 0;
+    int delModsCount = 0;
+    int missedModsCount = 0;
     this->mods = Loader::settings->GetMods();
     this->ProcessAllZipFiles();
 
@@ -78,6 +82,7 @@ void ModLoadOrder::LoadConfig() {
             spdlog::info("Removing non-existent mod: {}", it->name);
             it = this->mods.erase(it);
             changed = true;
+            delModsCount++;
         } else {
             it++;
         }
@@ -89,6 +94,7 @@ void ModLoadOrder::LoadConfig() {
 
             if (Utils::HasCyrillic(entry.path().filename().wstring())) {
                 spdlog::warn("Mod \"{}\" skipped: Cyrillic in name. Rename folder to English to load.", name);
+                missedModsCount++;
                 continue;
             }
             
@@ -99,6 +105,7 @@ void ModLoadOrder::LoadConfig() {
                 spdlog::info("Found new mod folder: {}", name);
                 this->mods.push_back({name, {}, true});
                 changed = true;
+                newModsCount++;
             }
         }
     }
@@ -125,6 +132,9 @@ void ModLoadOrder::LoadConfig() {
     }
 
     if (changed) this->SaveConfig();
+    if (newModsCount) LoaderUI::CreateNotification(4, LOC("NOTF_MODS_ADDED"), newModsCount);
+    if (delModsCount) LoaderUI::CreateNotification(4, LOC("NOTF_MODS_REMOVED"), delModsCount);
+    if (missedModsCount) LoaderUI::CreateNotification(2, LOC("NOTF_MODS_MISSED"), missedModsCount);
 
     this->RebuildVFS();
 }

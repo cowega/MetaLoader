@@ -4,26 +4,44 @@
 
 Localization::Localization() {
     this->langIndex = this->GetLang();
+    this->LoadLocalizedText();
 }
 
 Localization::~Localization() { }
 
-std::string Localization::Get(const char* key) {
-    std::string lang;
-    switch (this->langIndex) {
-    case 0:
-        lang = "ru";
-        break;
-    case 1:
-        lang = "en";
-        break;
+void Localization::LoadLocalizedText() {
+    Localization::translations.clear();
+    
+    for (const auto& [key, value] : Locales::locale.items()) {
+        TranslationEntry entry;
+        
+        if (value.contains("ru")) {
+            entry.ru = value["ru"].get<std::string>();
+        } else {
+            entry.ru = key;
+        }
 
-    default:
-        lang = "en";
-        break;
+        if (value.contains("en")) {
+            entry.en = value["en"].get<std::string>();
+        } else {
+            entry.en = key;
+        }
+
+        Localization::translations[key] = std::move(entry);
     }
 
-    return Locales::locale[key][lang].get<std::string>();
+}
+
+const std::string& Localization::Get(const char* key) {
+    const std::string currentLang = (this->langIndex == 0) ? "ru" : "en";
+    
+    auto it = Localization::translations.find(key);
+    if (it != Localization::translations.end()) {
+        return (currentLang == "ru") ? it->second.ru : it->second.en;
+    }
+
+    static const std::string fallback = "???";
+    return fallback;
 }
 
 void Localization::SetLang(int index) {

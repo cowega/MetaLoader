@@ -19,7 +19,8 @@ LoaderUI::LoaderUI(ModLoadOrder* mlo) {
     } while (!areHooksInit);
 
     if (!this->mlo) this->mlo = mlo;
-    if (!this->loc) this->loc = new Localization();
+    this->CreateNotification(1, LOC("NOTF_ML_LOADED"));
+    this->FlushPendingToasts();
 }
 
 LoaderUI::~LoaderUI() {
@@ -32,7 +33,6 @@ LoaderUI::~LoaderUI() {
     }
 
     delete this->mlo;
-    delete this->loc;
     delete this->fonts;
     delete this->mainRenderTargetView;
     delete this->pContext;
@@ -164,6 +164,11 @@ HRESULT __stdcall LoaderUI::PresentHook(IDXGISwapChain* pSwapChain, UINT SyncInt
     ImGui::NewFrame();
 
     if (LoaderUI::renderMenu) LoaderUI::RenderMenu();
+    
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(12.f, 12.f));
+    ImGui::RenderNotifications();
+    ImGui::PopStyleVar(1);
+
     ImGui::Render();
     pContext->OMSetRenderTargets(1, &mainRenderTargetView, NULL);
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
@@ -174,7 +179,10 @@ HRESULT __stdcall LoaderUI::PresentHook(IDXGISwapChain* pSwapChain, UINT SyncInt
 void LoaderUI::RenderMenu() {
     auto DrawTitle = []() {
         float y = ImGui::GetCursorPosY();
-        if (ImGui::Button(reinterpret_cast<const char*>(u8"\uf01e"))) mlo->Refresh();
+        if (ImGui::Button(reinterpret_cast<const char*>(u8"\uf01e"))) {
+            mlo->Refresh();
+            LoaderUI::CreateNotification(1, LOC("NOTF_MODLIST_REFRESHED"));
+        }
         Utils::UI::Hint(LOC("RELOAD_LIST"));
         ImGui::SameLine();
         if (ImGui::Button(reinterpret_cast<const char*>(u8"\uf07b"))) Utils::openModFolder();
@@ -182,8 +190,8 @@ void LoaderUI::RenderMenu() {
         
         ImGui::PushItemWidth(ImGui::CalcTextSize(LOC("SELECTED_LANG")).x + 40);
         ImGui::SameLine();
-        static int selectedLang = loc->GetLang();
-        if (ImGui::Combo("##lang", &selectedLang, Locales::languages, IM_ARRAYSIZE(Locales::languages))) loc->SetLang(selectedLang);
+        static int selectedLang = LoaderUI::GetLoc().GetLang();
+        if (ImGui::Combo("##lang", &selectedLang, Locales::languages, IM_ARRAYSIZE(Locales::languages))) LoaderUI::GetLoc().SetLang(selectedLang);
         ImGui::PopItemWidth();
 
         ImGui::SameLine(ImGui::GetWindowWidth() * 0.5 - ImGui::CalcTextSize("MetaLoader").x * 0.5, 0);
@@ -301,6 +309,26 @@ void LoaderUI::RenderMenu() {
     ImGui::PopStyleVar();
     DrawFooter();
     ImGui::End();
+}
+
+void LoaderUI::CreateNotification(unsigned toastType, const char* text, ...) {
+    ImGuiToast toast((ImGuiToastType)toastType, 3500);
+    toast.setTitle("MetaLoader");
+    NOTIFY_FORMAT(toast.setContent, text);
+    if (LoaderUI::isUIInit) {
+        ImGui::InsertNotification(toast);
+        return;
+    }
+    LoaderUI::pendingToasts.push_back(toast);
+}
+
+void LoaderUI::FlushPendingToasts() {
+    if (LoaderUI::pendingToasts.empty()) return;
+
+    for (auto& toast : pendingToasts) {
+        toast.resetTimer();
+        ImGui::InsertNotification(toast);
+    }
 }
 
 void LoaderUI::InitStyles() {

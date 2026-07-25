@@ -7,11 +7,12 @@
 #include "imgui.h"
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx11.h"
+#include "ImGuiNotify.hpp"
 
 #include "ModLoadOrder.hpp"
 #include "Localization.hpp"
 
-#define LOC(key) loc->Get(key).c_str()
+#define LOC(key) LoaderUI::GetLoc().Get(key).c_str()
 
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -31,10 +32,14 @@ public:
     LoaderUI(ModLoadOrder* mlo);
     ~LoaderUI();
     inline static Fonts* fonts = new Fonts();
-    
+    inline static std::vector<ImGuiToast> pendingToasts;
+
+    static inline Localization& GetLoc() { static Localization i; return i; }
+    static void CreateNotification(unsigned toastType, const char* text, ...);
+    static void FlushPendingToasts();
+
 private:
     inline static ModLoadOrder* mlo;
-    inline static Localization* loc;
 
     inline static Present oPresent;
     inline static ResizeBuffers oResizeBuffers;

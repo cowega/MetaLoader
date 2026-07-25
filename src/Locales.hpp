@@ -26,6 +26,26 @@ namespace Locales {
         {"MODS_LIST_TITLE_TOOLTIP", {
             {"ru", "Потяните за мод, чтобы изменить его позицию в списке\nИзменения вступят в силу после загрузки игрой ресурсов"},
             {"en", "Drag a mod to change its position in the list\nChanges will take effect after the game loads resources"}
+        }},
+        {"NOTF_ML_LOADED", {
+            {"ru", "Добро пожаловать!"},
+            {"en", "Welcome!"}
+        }},
+        {"NOTF_MODLIST_REFRESHED", {
+            {"ru", "Список модификаций обновлён"},
+            {"en", "Mod list refreshed"}
+        }},
+        {"NOTF_MODS_ADDED", {
+            {"ru", "Добавлено модов: %d"},
+            {"en", "Added mods: %d"}
+        }},
+        {"NOTF_MODS_REMOVED", {
+            {"ru", "Удалено модов: %d"},
+            {"en", "Removed mods: %d"}
+        }},
+        {"NOTF_MODS_MISSED", {
+            {"ru", "Пропущено модов: %d"},
+            {"en", "Mods skipped: %d"}
         }}
     };
 }
